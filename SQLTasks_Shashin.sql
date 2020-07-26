@@ -78,10 +78,10 @@ the member name. */
 
 SELECT f.name, CONCAT(m.firstname, ' ', m.surname) AS Members_Name 
 FROM `Facilities` AS f
-INNER JOIN `Bookings` AS b
-ON b.facid = f.facid
-INNER JOIN `Members` AS m
-ON b.memid = m.memid
+	INNER JOIN `Bookings` AS b
+		ON b.facid = f.facid
+	INNER JOIN `Members` AS m
+		ON b.memid = m.memid
 WHERE f.name IN ('Tennis Court 1', 'Tennis Court 2')
 GROUP BY f.name, Members_Name
 ORDER BY Members_Name
@@ -92,6 +92,30 @@ different costs to members (the listed costs are per half-hour 'slot'), and
 the guest user's ID is always 0. Include in your output the name of the
 facility, the name of the member formatted as a single column, and the cost.
 Order by descending cost, and do not use any subqueries. */
+
+/* Query to select cost (> $30) incurred by Guests*/
+SELECT f.name, CONCAT(m.firstname, ' ', m.surname) AS Members_Name, 
+f.guestcost*b.slots as cost
+FROM `Members` AS m
+	INNER JOIN `Bookings` AS b
+		ON m.memid = b.memid
+	INNER JOIN `Facilities` as f
+		ON f.facid = b.facid
+WHERE m.memid = 0 AND f.guestcost*b.slots > 30 AND date(b.starttime) = '2012-09-14'
+
+UNION
+
+/* Second query to get cost (>30$) incurred by members*/
+SELECT f.name, CONCAT(m.firstname, ' ', m.surname) AS Members_Name, 
+f.membercost*b.slots
+FROM `Members` AS m
+	INNER JOIN `Bookings` AS b
+		ON m.memid = b.memid
+	INNER JOIN `Facilities` as f
+		ON f.facid = b.facid
+WHERE m.memid != 0 AND f.membercost*b.slots > 30 AND date(b.starttime) = '2012-09-14'
+ORDER BY cost DESC
+ 
 
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
