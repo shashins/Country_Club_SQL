@@ -120,6 +120,17 @@ ORDER BY cost DESC
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
 
+SELECT f.name, CONCAT(m.firstname, ' ', m.surname) AS Members_Name, 
+	(SELECT f.guestcost*b.slots
+     FROM `Bookings` as b
+     WHERE f.guestcost*b.slots > 30 AND date(b.starttime) = '2012-09-14'
+     
+     UNION
+     
+     SELECT f.memberscost*b.slots
+     FROM `Bookings` as b
+     WHERE f.memberscost*b.slots > 30 AND date(b.starttime) = '2012-09-14') AS cost
+FROM `Members` AS m, `Facilities` AS f
 
 /* PART 2: SQLite
 /* We now want you to jump over to a local instance of the database on your machine. 
@@ -141,7 +152,28 @@ QUESTIONS:
 The output of facility name and total revenue, sorted by revenue. Remember
 that there's a different cost for guests and members! */
 
+SELECT subquery.name, subquery.revenue
+
+FROM
+	(SELECT f.name, SUM(
+	CASE WHEN b.memid =0 THEN b.slots * f.guestcost
+		 ELSE b.slots * f.membercost END ) AS revenue
+	FROM `Facilities` AS f
+		INNER JOIN `Bookings` AS b 
+		ON f.facid = b.facid
+	GROUP BY f.name) AS subquery
+
+WHERE subquery.revenue < 1000
+ORDER BY subquery.revenue
+
 /* Q11: Produce a report of members and who recommended them in alphabetic surname,firstname order */
+
+SELECT m.memid, m.surname, m.firstname, (r.firstname || ' ' || r.surname) AS recommender
+FROM `Members` AS m
+INNER JOIN `Members` AS r
+ON m.recommendedby = r.memid
+WHERE m.memid != 0
+ORDER BY m.surname, m.firstname
 
 
 /* Q12: Find the facilities with their usage by member, but not guests */
