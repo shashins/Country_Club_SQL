@@ -178,6 +178,17 @@ ORDER BY m.surname, m.firstname
 
 /* Q12: Find the facilities with their usage by member, but not guests */
 
+SELECT b.facid, f.name, SUM( b.slots ) AS usage_by_member
+FROM `Bookings` AS b
+INNER JOIN `Facilities` AS f ON b.facid = f.facid
+WHERE b.memid !=0
+GROUP BY b.facid
+
 
 /* Q13: Find the facilities usage by month, but not guests */
 
+SELECT b.facid, f.name, MONTH(b.starttime) as month, SUM(b.slots) AS usage_by_month
+FROM `Bookings` AS b
+INNER JOIN `Facilities` AS f ON b.facid = f.facid
+WHERE b.memid !=0
+GROUP BY b.facid, month
