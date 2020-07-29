@@ -120,17 +120,20 @@ ORDER BY cost DESC
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
 
-SELECT f.name, CONCAT(m.firstname, ' ', m.surname) AS Members_Name, 
-	(SELECT f.guestcost*b.slots
-     FROM `Bookings` as b
-     WHERE f.guestcost*b.slots > 30 AND date(b.starttime) = '2012-09-14'
-     
-     UNION
-     
-     SELECT f.memberscost*b.slots
-     FROM `Bookings` as b
-     WHERE f.memberscost*b.slots > 30 AND date(b.starttime) = '2012-09-14') AS cost
-FROM `Members` AS m, `Facilities` AS f
+SELECT subquery.name, subquery.Members_Name, subquery.cost
+FROM (
+
+SELECT f.name, CONCAT( m.firstname, ' ', m.surname ) AS Members_Name,
+CASE WHEN m.memid =0
+THEN f.guestcost * b.slots
+ELSE f.membercost * b.slots
+END AS cost
+FROM `Members` AS m
+INNER JOIN `Bookings` AS b ON m.memid = b.memid
+INNER JOIN `Facilities` AS f ON f.facid = b.facid
+WHERE DATE(b.starttime) = '2012-09-14') AS subquery
+WHERE subquery.cost >30
+ORDER BY cost DESC
 
 /* PART 2: SQLite
 /* We now want you to jump over to a local instance of the database on your machine. 
@@ -187,8 +190,9 @@ GROUP BY b.facid
 
 /* Q13: Find the facilities usage by month, but not guests */
 
-SELECT b.facid, f.name, MONTH(b.starttime) as month, SUM(b.slots) AS usage_by_month
+SELECT b.facid, f.name, strftime('%m', b.starttime) as month, SUM(b.slots) AS usage_by_month
 FROM `Bookings` AS b
-INNER JOIN `Facilities` AS f ON b.facid = f.facid
+INNER JOIN `Facilities` AS f 
+ON b.facid = f.facid
 WHERE b.memid !=0
 GROUP BY b.facid, month
